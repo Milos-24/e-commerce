@@ -2,19 +2,17 @@ package com.commerce.service;
 
 import com.commerce.model.Payment;
 import com.commerce.repository.PaymentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-
-    public PaymentService(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
-    }
 
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
@@ -24,8 +22,8 @@ public class PaymentService {
         return paymentRepository.findById(id);
     }
 
-    public List<Payment> getPaymentsByOrderId(String orderId) {
-        return paymentRepository.findByOrderId(orderId);
+    public List<Payment> getPaymentsByPaymentId(String paymentId) {
+        return paymentRepository.findByPaymentId(paymentId);
     }
 
     public Payment savePayment(Payment payment) {

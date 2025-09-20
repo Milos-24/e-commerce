@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface PaymentRepository extends MongoRepository<Payment, String> {
-    List<Payment> findByOrderId(String orderId); // Custom query to find payments by order ID
+    List<Payment> findByPaymentId(String paymentId); // Custom query to find payments by order ID
 }

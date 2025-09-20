@@ -27,9 +27,9 @@ public class PaymentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/order/{orderId}")
-    public List<Payment> getPaymentsByOrderId(@PathVariable String orderId) {
-        return paymentService.getPaymentsByOrderId(orderId);
+    @GetMapping("/order/{paymentId}")
+    public List<Payment> getPaymentsByPaymentId(@PathVariable String paymentId) {
+        return paymentService.getPaymentsByPaymentId(paymentId);
     }
 
     @PostMapping
