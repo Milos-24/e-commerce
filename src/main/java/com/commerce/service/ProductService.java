@@ -6,10 +6,12 @@ import com.commerce.s3.S3Buckets;
 import com.commerce.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,13 +20,27 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class ProductService {
+
     private final ProductRepository productRepository;
     private final S3Service s3Service;
     private final S3Buckets s3Buckets;
+    private final MongoTemplate mongoTemplate;
 
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+
+        for (Product product : products) {
+            if (product.getImageUrls() != null) {
+                List<String> presignedUrls = product.getImageUrls().stream()
+                        .map(key -> s3Service.generatePresignedUrl(s3Buckets.getEcomm(), key))
+                        .toList();
+                product.setImageUrls(presignedUrls);
+            }
+        }
+
+        return products;
     }
+
 
     public Optional<Product> getProductById(String id) {
         return productRepository.findById(id);
@@ -79,6 +95,8 @@ public class ProductService {
         try {
             // 1. Save the product first (so it has an ID)
             Product saved = productRepository.save(product);
+            List<String> imageUrls = new ArrayList<>();
+            saved.setImageUrls(imageUrls);
 
             // 2. Create a unique key for S3
             String key = "images/" + saved.getId() + "/" + UUID.randomUUID();
@@ -92,6 +110,20 @@ public class ProductService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload image", e);
         }
+    }
+
+    public List<String> getDistinctBrands() {
+        return mongoTemplate.query(Product.class)
+                .distinct("brand")
+                .as(String.class)
+                .all();
+    }
+
+    public List<String> getDistinctCategories() {
+        return mongoTemplate.query(Product.class)
+                .distinct("categories")
+                .as(String.class)
+                .all();
     }
 
 }

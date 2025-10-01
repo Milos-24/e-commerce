@@ -6,3 +6,7 @@ aws:
   s3:
     buckets:
       ecomm: ecomm-diplomski
+jwt:
+  secret: d17776ac7f94056e8e4b13af185f6441
+  expirationMs: 3600000
+

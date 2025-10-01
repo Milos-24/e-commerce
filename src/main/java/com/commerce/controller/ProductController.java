@@ -1,7 +1,6 @@
 package com.commerce.controller;
 
 import com.commerce.model.Product;
-import com.commerce.s3.S3Service;
 import com.commerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +17,7 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
+    @CrossOrigin
     public List<Product> getAllProducts() {
         return productService.getAllProducts();
     }
@@ -29,10 +29,6 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public Product createProduct(@RequestBody Product product) {
-        return productService.saveProduct(product);
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
@@ -66,14 +62,19 @@ public class ProductController {
     }
 
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping
     public ResponseEntity<Product> createProduct(
             @RequestPart("product") Product product,
-            @RequestPart("file") MultipartFile file) {
-
-        Product savedProduct = productService.createProductWithImage(product, file);
-        return ResponseEntity.ok(savedProduct);
+            @RequestParam("file") MultipartFile file
+    ) {
+        Product createdProduct = productService.createProductWithImage(product, file);
+        return ResponseEntity.ok(createdProduct);
     }
 
+    @CrossOrigin
+    @GetMapping("/categories/distinct")
+    public List<String> getDistinctCategories() {
+        return productService.getDistinctCategories();
+    }
 
 }
