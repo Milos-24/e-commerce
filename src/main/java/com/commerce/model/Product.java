@@ -1,5 +1,6 @@
 package com.commerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,4 +32,6 @@ public class Product {
     private List<Review> reviews;
     private List<String> imageUrls; // S3 object keys
 
+    @JsonIgnore
+    private List<Double> embedding; // OpenAI vector embedding — not exposed in API responses
 }

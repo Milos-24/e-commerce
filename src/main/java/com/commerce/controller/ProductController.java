@@ -22,7 +22,8 @@ public class ProductController {
         return productService.getAllProducts();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/product/{id}")
+    @CrossOrigin
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
         return productService.getProductById(id)
                 .map(ResponseEntity::ok)
@@ -37,12 +38,14 @@ public class ProductController {
     }
 
     @GetMapping("/price-range")
+    @CrossOrigin
     public List<Product> getProductsByPriceRange(@RequestParam double minPrice, @RequestParam double maxPrice) {
         return productService.getProductsByPriceRange(minPrice, maxPrice);
     }
 
-    @GetMapping("/category")
-    public List<Product> getProductsByCategory(@RequestParam String category) {
+    @GetMapping("/category/{category}")
+    @CrossOrigin
+    public List<Product> getProductsByCategory(@PathVariable String category) {
         return productService.getProductsByCategory(category);
     }
 
@@ -75,6 +78,28 @@ public class ProductController {
     @GetMapping("/categories/distinct")
     public List<String> getDistinctCategories() {
         return productService.getDistinctCategories();
+    }
+
+    /**
+     * Semantic product search powered by OpenAI embeddings + MongoDB Atlas Vector Search.
+     * Example: GET /api/products/search?q=high+protein+vanilla+supplement&limit=5
+     */
+    @CrossOrigin
+    @GetMapping("/search")
+    public List<Product> vectorSearch(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "10") int limit) {
+        return productService.vectorSearch(q, limit);
+    }
+
+    /**
+     * Admin endpoint: re-generates OpenAI embeddings for every product in the DB.
+     * Call once after creating the Atlas Vector Search index to backfill existing products.
+     */
+    @PostMapping("/reindex")
+    public ResponseEntity<String> reindex() {
+        int count = productService.reindexAllProducts();
+        return ResponseEntity.ok("Reindexed " + count + " products");
     }
 
 }
