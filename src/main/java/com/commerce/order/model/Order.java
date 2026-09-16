@@ -15,8 +15,11 @@ import java.util.List;
 @Data @AllArgsConstructor @NoArgsConstructor @Builder
 @Document(collection = "orders")
 @CompoundIndexes({
-        @CompoundIndex(name = "customer_created", def = "{'customerId': 1, 'createdAt': -1}"),
-        @CompoundIndex(name = "status_created",   def = "{'status': 1, 'createdAt': -1}")
+        @CompoundIndex(name = "customer_created",  def = "{'customerId': 1, 'createdAt': -1}"),
+        @CompoundIndex(name = "status_created",    def = "{'status': 1, 'createdAt': -1}"),
+        @CompoundIndex(name = "fullname_idx",      def = "{'shippingAddress.fullName': 1}"),
+        @CompoundIndex(name = "total_idx",         def = "{'total': -1}"),
+        @CompoundIndex(name = "created_idx",       def = "{'createdAt': -1}")
 })
 public class Order {
     @Id private String id;
@@ -30,6 +33,10 @@ public class Order {
     private ShippingAddress shippingAddress;
     private OrderStatus status;
     private PaymentStatus paymentStatus;
+    private PaymentMethod paymentMethod;
+    private List<StatusHistoryEntry> statusHistory;
+    private String trackingNumber;
+    private String carrier;
     private Instant createdAt;
     private Instant updatedAt;
 }

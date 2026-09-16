@@ -1,5 +1,6 @@
 package com.commerce.order.dto;
 
+import com.commerce.order.model.PaymentMethod;
 import com.commerce.order.model.ShippingAddress;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -17,4 +18,5 @@ public class PlaceOrderRequest {
     @NotEmpty @Valid private List<OrderItemRequest> items;
     @NotNull @Valid private ShippingAddress shippingAddress;
     private String currency = "USD";
+    @NotNull private PaymentMethod paymentMethod;
 }

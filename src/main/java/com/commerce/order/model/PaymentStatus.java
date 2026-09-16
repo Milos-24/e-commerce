@@ -1,5 +1,5 @@
 package com.commerce.order.model;
 
 public enum PaymentStatus {
-    PENDING, PAID, FAILED, REFUNDED
+    COD_PENDING, PENDING, PAID, FAILED, REFUNDED
 }

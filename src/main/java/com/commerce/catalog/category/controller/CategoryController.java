@@ -12,10 +12,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/categories")
 public class CategoryController {
+
     private final CategoryService categoryService;
 
     @GetMapping
-    public List<Category> getAllCategories() { return categoryService.getAllCategories(); }
+    public List<Category> getAllCategories() {
+        return categoryService.getAllCategories();
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable String id) {
@@ -23,7 +26,9 @@ public class CategoryController {
     }
 
     @PostMapping
-    public Category createCategory(@RequestBody Category category) { return categoryService.saveCategory(category); }
+    public Category createCategory(@RequestBody Category category) {
+        return categoryService.saveCategory(category);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable String id) {

@@ -7,6 +7,7 @@ import com.commerce.order.dto.OrderItemRequest;
 import com.commerce.order.dto.OrderResponse;
 import com.commerce.order.dto.PlaceOrderRequest;
 import com.commerce.order.model.OrderStatus;
+import com.commerce.order.model.PaymentMethod;
 import com.commerce.order.model.ShippingAddress;
 import com.commerce.order.repository.OrderRepository;
 import com.commerce.order.service.OrderService;
@@ -70,14 +71,14 @@ class OrderServiceIntegrationTest {
         inventoryRepository.save(Inventory.builder().productId(product.getId()).stock(10).build());
 
         OrderResponse resp = orderService.placeOrder(new PlaceOrderRequest(
-                "customer-1", List.of(new OrderItemRequest(product.getId(), 2)), ADDRESS, "USD"));
+                "customer-1", List.of(new OrderItemRequest(product.getId(), 2)), ADDRESS, "USD", PaymentMethod.CASH_ON_DELIVERY));
 
         assertThat(resp.getId()).isNotNull();
         assertThat(resp.getItems().get(0).getLineSubtotal()).isEqualTo(49.98, within(0.001));
         assertThat(resp.getSubtotal()).isEqualTo(49.98, within(0.001));
         assertThat(resp.getShippingCost()).isEqualTo(5.99, within(0.001));
         assertThat(resp.getTax()).isEqualTo(49.98 * 0.08, within(0.001));
-        assertThat(resp.getStatus()).isEqualTo(OrderStatus.PENDING);
+        assertThat(resp.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
     }
 
     @Test
@@ -87,7 +88,7 @@ class OrderServiceIntegrationTest {
         inventoryRepository.save(Inventory.builder().productId(product.getId()).stock(5).build());
 
         orderService.placeOrder(new PlaceOrderRequest(
-                "customer-1", List.of(new OrderItemRequest(product.getId(), 3)), ADDRESS, "USD"));
+                "customer-1", List.of(new OrderItemRequest(product.getId(), 3)), ADDRESS, "USD", PaymentMethod.CASH_ON_DELIVERY));
 
         Inventory updated = inventoryRepository.findInventoryByProductId(product.getId()).get(0);
         assertThat(updated.getStock()).isEqualTo(2);
@@ -100,7 +101,7 @@ class OrderServiceIntegrationTest {
         inventoryRepository.save(Inventory.builder().productId(product.getId()).stock(1).build());
 
         assertThatThrownBy(() -> orderService.placeOrder(new PlaceOrderRequest(
-                "customer-1", List.of(new OrderItemRequest(product.getId(), 5)), ADDRESS, "USD")))
+                "customer-1", List.of(new OrderItemRequest(product.getId(), 5)), ADDRESS, "USD", PaymentMethod.CASH_ON_DELIVERY)))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Insufficient stock");
     }
@@ -116,7 +117,7 @@ class OrderServiceIntegrationTest {
 
         assertThatThrownBy(() -> orderService.placeOrder(new PlaceOrderRequest("customer-1", List.of(
                 new OrderItemRequest(p1.getId(), 2),
-                new OrderItemRequest(p2.getId(), 5)), ADDRESS, "USD")))
+                new OrderItemRequest(p2.getId(), 5)), ADDRESS, "USD", PaymentMethod.CASH_ON_DELIVERY)))
                 .isInstanceOf(ResponseStatusException.class);
 
         Inventory p1Inv = inventoryRepository.findInventoryByProductId(p1.getId()).get(0);

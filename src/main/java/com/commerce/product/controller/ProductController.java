@@ -3,6 +3,7 @@ package com.commerce.product.controller;
 import com.commerce.product.model.Product;
 import com.commerce.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +18,17 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public List<Product> getAllProducts() { return productService.getAllProducts(); }
+    public Page<Product> getProducts(
+            @RequestParam(defaultValue = "0")    int page,
+            @RequestParam(defaultValue = "20")   int size,
+            @RequestParam(defaultValue = "name") String sortField,
+            @RequestParam(defaultValue = "asc")  String sortDir,
+            @RequestParam(required = false)      String category,
+            @RequestParam(required = false)      String brand,
+            @RequestParam(required = false)      Double minPrice,
+            @RequestParam(required = false)      Double maxPrice) {
+        return productService.getProducts(page, size, sortField, sortDir, category, brand, minPrice, maxPrice);
+    }
 
     @GetMapping("/product/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable String id) {

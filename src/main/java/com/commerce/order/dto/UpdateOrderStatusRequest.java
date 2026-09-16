@@ -9,4 +9,6 @@ import lombok.NoArgsConstructor;
 @Data @AllArgsConstructor @NoArgsConstructor
 public class UpdateOrderStatusRequest {
     @NotNull private OrderStatus status;
+    private String trackingNumber;
+    private String carrier;
 }

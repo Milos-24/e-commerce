@@ -30,8 +30,10 @@ public class OrderService {
     private static final double SHIPPING_COST = 5.99;
     private static final double TAX_RATE = 0.08;
 
-    public List<OrderResponse> getAllOrders() {
-        return orderRepository.findAll().stream().map(this::toResponse).toList();
+    public Page<OrderResponse> getOrders(int page, int size, String sortField, String sortDir,
+                                          OrderStatus status, String customerName, String email) {
+        return orderRepository.findOrdersFiltered(page, size, sortField, sortDir, status, customerName, email)
+                .map(this::toResponse);
     }
 
     public OrderResponse placeOrder(PlaceOrderRequest request) {
@@ -49,7 +51,9 @@ public class OrderService {
                 }
                 decremented.add(new DecrementRecord(itemReq.getProductId(), itemReq.getQuantity()));
 
-                double unitPrice = product.getPrice() * (1.0 - product.getDiscount() / 100.0);
+                double unitPrice = product.isDiscountEnabled()
+                        ? product.getPrice() * (1.0 - product.getDiscount() / 100.0)
+                        : product.getPrice();
                 lineItems.add(LineItem.builder()
                         .productId(product.getId())
                         .productName(product.getName())
@@ -69,6 +73,14 @@ public class OrderService {
         double subtotal = lineItems.stream().mapToDouble(LineItem::getLineSubtotal).sum();
         double tax = subtotal * TAX_RATE;
 
+        boolean isCOD = request.getPaymentMethod() == PaymentMethod.CASH_ON_DELIVERY;
+        OrderStatus initialStatus = isCOD ? OrderStatus.CONFIRMED : OrderStatus.PAID;
+        PaymentStatus initialPaymentStatus = isCOD ? PaymentStatus.COD_PENDING : PaymentStatus.PAID;
+
+        Instant now = Instant.now();
+        List<StatusHistoryEntry> statusHistory = new ArrayList<>();
+        statusHistory.add(StatusHistoryEntry.builder().status(initialStatus).timestamp(now).build());
+
         return toResponse(orderRepository.save(Order.builder()
                 .customerId(request.getCustomerId())
                 .items(lineItems)
@@ -78,10 +90,12 @@ public class OrderService {
                 .total(subtotal + SHIPPING_COST + tax)
                 .currency(request.getCurrency() != null ? request.getCurrency() : "USD")
                 .shippingAddress(request.getShippingAddress())
-                .status(OrderStatus.PENDING)
-                .paymentStatus(PaymentStatus.PENDING)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .status(initialStatus)
+                .paymentStatus(initialPaymentStatus)
+                .paymentMethod(request.getPaymentMethod())
+                .statusHistory(statusHistory)
+                .createdAt(now)
+                .updatedAt(now)
                 .build()));
     }
 
@@ -95,11 +109,22 @@ public class OrderService {
         return orderRepository.findByCustomerId(customerId, PageRequest.of(page, size)).map(this::toResponse);
     }
 
-    public OrderResponse updateStatus(String id, OrderStatus newStatus) {
+    public OrderResponse updateStatus(String id, UpdateOrderStatusRequest request) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found: " + id));
-        order.setStatus(newStatus);
-        order.setUpdatedAt(Instant.now());
+
+        Instant now = Instant.now();
+        order.setStatus(request.getStatus());
+        order.setUpdatedAt(now);
+
+        if (order.getStatusHistory() == null) order.setStatusHistory(new ArrayList<>());
+        order.getStatusHistory().add(StatusHistoryEntry.builder().status(request.getStatus()).timestamp(now).build());
+
+        if (request.getStatus() == OrderStatus.SHIPPED) {
+            if (request.getTrackingNumber() != null) order.setTrackingNumber(request.getTrackingNumber());
+            if (request.getCarrier() != null) order.setCarrier(request.getCarrier());
+        }
+
         return toResponse(orderRepository.save(order));
     }
 
@@ -117,6 +142,10 @@ public class OrderService {
                 .tax(order.getTax()).total(order.getTotal()).currency(order.getCurrency())
                 .shippingAddress(order.getShippingAddress())
                 .status(order.getStatus()).paymentStatus(order.getPaymentStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .statusHistory(order.getStatusHistory())
+                .trackingNumber(order.getTrackingNumber())
+                .carrier(order.getCarrier())
                 .createdAt(order.getCreatedAt()).updatedAt(order.getUpdatedAt())
                 .build();
     }

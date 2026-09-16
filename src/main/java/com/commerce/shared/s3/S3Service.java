@@ -1,6 +1,7 @@
 package com.commerce.shared.s3;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -38,6 +39,7 @@ public class S3Service {
         }
     }
 
+    @Cacheable(value = "presigned-urls", key = "#key")
     public String generatePresignedUrl(String bucket, String key) {
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                 .getObjectRequest(GetObjectRequest.builder().bucket(bucket).key(key).build())

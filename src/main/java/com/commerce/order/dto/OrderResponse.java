@@ -1,8 +1,10 @@
 package com.commerce.order.dto;
 
 import com.commerce.order.model.OrderStatus;
+import com.commerce.order.model.PaymentMethod;
 import com.commerce.order.model.PaymentStatus;
 import com.commerce.order.model.ShippingAddress;
+import com.commerce.order.model.StatusHistoryEntry;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +26,10 @@ public class OrderResponse {
     private ShippingAddress shippingAddress;
     private OrderStatus status;
     private PaymentStatus paymentStatus;
+    private PaymentMethod paymentMethod;
+    private List<StatusHistoryEntry> statusHistory;
+    private String trackingNumber;
+    private String carrier;
     private Instant createdAt;
     private Instant updatedAt;
 }
